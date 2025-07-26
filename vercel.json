@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "ENKA_CARD/main.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "ENKA_CARD/main.py"
+    }
+  ],
+  "functions": {
+    "ENKA_CARD/main.py": {
+      "runtime": "python3.12"
+    }
+  }
+} 

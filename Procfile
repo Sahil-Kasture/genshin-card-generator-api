@@ -1,1 +1,0 @@
-web: python ENKA_CARD/main.py 

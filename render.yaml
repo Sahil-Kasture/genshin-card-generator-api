@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: genshin-card-generator
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python ENKA_CARD/main.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: PORT
+        value: 8000
+    healthCheckPath: /
+    autoDeploy: true 

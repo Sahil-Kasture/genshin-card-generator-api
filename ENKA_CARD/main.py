@@ -1,50 +1,81 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import asyncio
 from enkanetwork import EnkaNetworkAPI, Language, Assets
 from ENKA_CARD.character_card.generator import generate_image
-from enkacard  import encbanner
+from enkacard import encbanner
 from profile_card.profile_full import profile_template2_full
 from profile_card.src.utils.translation import translationLang
+import fastapi
+from fastapi import HTTPException
+from fastapi.responses import Response
+import io
+import uvicorn
 
+app = fastapi.FastAPI(title="Genshin Card Generator API", version="1.0.0")
 
-client = EnkaNetworkAPI(lang=Language.EN)
+@app.get("/")
+async def root():
+    return {"message": "Genshin Card Generator API is running!"}
 
-uid = '855170541'
+@app.get("/character_card1/{uid}")
+async def character_card1(uid: str):
+    try:
+        async with encbanner.ENC(lang="en", uid=uid) as client:
+            res = await client.creat(template=2)
+            card = res.card[3]
+            card = card.card
+            img_byte_arr = io.BytesIO()
+            card.save(img_byte_arr, format='PNG')
+            img_byte_arr = img_byte_arr.getvalue()
+            
+            return Response(content=img_byte_arr, media_type="image/png")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating character card: {str(e)}")
 
-async def local_card(uid):
-    # await encbanner.update()
-    async with encbanner.ENC(lang="en",uid=uid) as client:
-        res=await client.creat(template=2)
-        card=res.card[3]
-        card=card.card
-        card.show()
+@app.get("/character_card2/{uid}")
+async def character_card2(uid: str):
+    try:
+        async with EnkaNetworkAPI(lang=Language.EN) as client:
+            data = await client.fetch_user(int(uid))
+            if not data.characters or len(data.characters) < 3:
+                raise HTTPException(status_code=404, detail="Character not found")
+            character = data.characters[2]
+            img = generate_image(data=data, character=character)
+            
+            # Convert image to bytes
+            img_byte_arr = io.BytesIO()
+            img.save(img_byte_arr, format='PNG')
+            img_byte_arr = img_byte_arr.getvalue()
+            
+            return Response(content=img_byte_arr, media_type="image/png")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating character card: {str(e)}")
 
-async def card2(uid):
-    async with client:
-        data = await client.fetch_user(int(uid))
-        character = data.characters[2]
-        img=generate_image(data=data,character=character)
-        img.show()
+@app.get("/profile_card/{uid}")
+async def profile_card(uid: str):
+    try:
+        lang_code = "en"
+        hide = False
+        assets = Assets(lang=lang_code)
+        lang_dict = translationLang[lang_code]
         
-async def profile(uid,client):
-    async with client:
-       data = await client.fetch_user(int(uid))
-       lang_code = "en"
-       hide = False
-       assets = Assets(lang=lang_code)
-       lang_dict = translationLang[lang_code]
-       async with EnkaNetworkAPI(lang=lang_code) as client:
+        async with EnkaNetworkAPI(lang=lang_code) as client:
             data = await client.fetch_user(uid)
             player = data.player
             result = await profile_template2_full(player, lang_dict, hide, uid, assets, image=True)
-            # Save the resulting image
-            result["img"].save(f"{data.player.nickname}.png")
-            print(f"Profile card generated and saved as profile2_full_output.png. Time taken: {result['performed']}s")
+            
+            # Convert image to bytes
+            img_byte_arr = io.BytesIO()
+            result["img"].save(img_byte_arr, format='PNG')
+            img_byte_arr = img_byte_arr.getvalue()
+            
+            return Response(content=img_byte_arr, media_type="image/png")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating profile card: {str(e)}")
 
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
         
-asyncio.run(local_card(uid))
-asyncio.run(card2(uid))
-# asyncio.run(profile(uid,client))

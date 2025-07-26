@@ -15,6 +15,13 @@ import uvicorn
 
 app = fastapi.FastAPI(title="Genshin Card Generator API", version="1.0.0")
 
+async def update():
+    try:    
+        await encbanner.update()
+        return {"message": "Update successful"}
+    except Exception as e:
+        print(e)
+
 @app.get("/")
 async def root():
     return {"message": "Genshin Card Generator API is running!"}
@@ -75,16 +82,10 @@ async def profile_card(uid: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating profile card: {str(e)}")
 
-@app.get("/update")
-async def update():
-    try:
-        await encbanner.update()
-        return {"message": "Update successful"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error updating: {str(e)}")
 
 if __name__ == "__main__":
     import os
+    asyncio.run(update())
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
         

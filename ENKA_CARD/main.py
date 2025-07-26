@@ -13,7 +13,7 @@ from fastapi.responses import Response
 import io
 import uvicorn
 
-enka_session=EnkaNetworkAPI(lang=Language.EN)
+enka_session = EnkaNetworkAPI(lang=Language.EN)
 
 app = fastapi.FastAPI(title="Genshin Card Generator API", version="1.0.0")
 
@@ -22,9 +22,16 @@ async def update():
         await enka_session.update_assets()
         return {"message": "Update successful"}
     except Exception as e:
-        print(e)
+        print(f"Update error: {e}")
+        return {"message": "Update failed"}
+
+@app.get("/update")
+async def update_endpoint():
+    """Manual update endpoint that can be called while server is live"""
+    return await update()
 
 @app.get("/")
+@app.head("/")
 async def root():
     return {"message": "Genshin Card Generator API is running!"}
 
@@ -87,7 +94,8 @@ async def profile_card(uid: str):
 
 if __name__ == "__main__":
     import os
-    asyncio.run(update())
     port = int(os.environ.get("PORT", 8000))
+    
+    print("Starting Genshin Card Generator API...")
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
         

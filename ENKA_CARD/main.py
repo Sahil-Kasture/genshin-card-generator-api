@@ -19,12 +19,12 @@ app = fastapi.FastAPI(title="Genshin Card Generator API", version="1.0.0")
 async def root():
     return {"message": "Genshin Card Generator API is running!"}
 
-@app.get("/character_card1/{uid}")
-async def character_card1(uid: str):
+@app.get("/character_card1/{uid}/{character_id}")
+async def character_card1(uid: str, character_id: int):
     try:
         async with encbanner.ENC(lang="en", uid=uid) as client:
             res = await client.creat(template=2)
-            card = res.card[3]
+            card = res.card[character_id]
             card = card.card
             img_byte_arr = io.BytesIO()
             card.save(img_byte_arr, format='PNG')
@@ -34,14 +34,14 @@ async def character_card1(uid: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating character card: {str(e)}")
 
-@app.get("/character_card2/{uid}")
-async def character_card2(uid: str):
+@app.get("/character_card2/{uid}/{character_id}")
+async def character_card2(uid: str, character_id: int):
     try:
         async with EnkaNetworkAPI(lang=Language.EN) as client:
             data = await client.fetch_user(int(uid))
             if not data.characters or len(data.characters) < 3:
                 raise HTTPException(status_code=404, detail="Character not found")
-            character = data.characters[2]
+            character = data.characters[character_id]
             img = generate_image(data=data, character=character)
             
             # Convert image to bytes
@@ -74,6 +74,14 @@ async def profile_card(uid: str):
             return Response(content=img_byte_arr, media_type="image/png")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating profile card: {str(e)}")
+
+@app.get("/update")
+async def update():
+    try:
+        await encbanner.update()
+        return {"message": "Update successful"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating: {str(e)}")
 
 if __name__ == "__main__":
     import os

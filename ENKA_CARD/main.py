@@ -13,11 +13,13 @@ from fastapi.responses import Response
 import io
 import uvicorn
 
+enka_session=EnkaNetworkAPI(lang=Language.EN)
+
 app = fastapi.FastAPI(title="Genshin Card Generator API", version="1.0.0")
 
 async def update():
     try:    
-        await encbanner.update()
+        await enka_session.update_assets()
         return {"message": "Update successful"}
     except Exception as e:
         print(e)

@@ -8,7 +8,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from enkanetwork import Assets, EnkaNetworkResponse, Language
 from enkanetwork.enum import DigitType, EquipmentsType
 from enkanetwork.model.character import CharacterInfo
-from enkanetwork.model.equipments import EquipmentsType
 from PIL import Image, ImageChops, ImageDraw, ImageEnhance
 
 from ENKA_CARD.character_card.prop_reference import RARITY_REFERENCE, SUBST_ORDER

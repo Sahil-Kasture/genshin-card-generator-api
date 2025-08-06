@@ -8,7 +8,6 @@ import requests
 from enkanetwork.enum import EquipmentsType
 from enkanetwork.model import Stats
 from enkanetwork.model.character import CharacterInfo
-from enkanetwork.model.equipments import EquipmentsType
 from PIL import Image, ImageChops, ImageFont, ImageOps
 from pydantic import BaseModel
 

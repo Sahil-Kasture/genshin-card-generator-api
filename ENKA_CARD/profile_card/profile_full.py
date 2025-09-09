@@ -11,7 +11,7 @@ from profile_card.src.utils.FunctionsPill import imagSize, imgD
 from enkanetwork import EnkaNetworkAPI, Assets
 from profile_card.src.utils.translation import translationLang
 
-# Helper: drawText
+
 async def drawText(text):
     line = []
     lineText = ""
@@ -26,7 +26,6 @@ async def drawText(text):
     else:
         return text
 
-# Helper: avatar
 async def avatar(fullBg, player):
     picturesProfile = await imagSize(link=player.avatar.icon.url, fixed_width=159)
     avatar_bg = avatar_user_bg.copy()
@@ -36,10 +35,10 @@ async def avatar(fullBg, player):
     fullBg.alpha_composite(ram_avatar, (475, 25))
     return fullBg
 
-# Helper: nameCard
+
 async def nameCard(player, fullBg):
     if player.namecard.navbar.url == "https://enka.network/ui/.png":
-        # Fallback/default image path may need to be adjusted
+       
         raise NotImplementedError("DEFAULT namecard image not implemented in this extraction.")
     else:
         bannerUserNamecard = await imgD(link=player.namecard.banner.url)
@@ -50,7 +49,7 @@ async def nameCard(player, fullBg):
     fullBg.alpha_composite(banner_light, (26, 0))
     return fullBg
 
-# Helper: usersInfo
+
 async def usersInfo(player, lang, hide, uid):
     fullBg = bgProfile.copy().convert("RGBA")
     bg = info_user.copy()
@@ -85,7 +84,6 @@ async def usersInfo(player, lang, hide, uid):
     fullBg = await avatar(fullBg, player)
     return await nameCard(player, fullBg)
 
-# Helper: charactersTwo
 async def charactersTwo(player, assets, image):
     t12 = ImageFont.truetype(font, 11)
     result = []
@@ -127,11 +125,11 @@ async def charactersTwo(player, assets, image):
                     banner = banner.resize((130, 57))
                 charter_bg_img.alpha_composite(banner, (32, 11))
             charter_bg_img.alpha_composite(iconCharter, (0, 5))
-            # Ensure iconCharters is same mode and size as charter_bg_img before alpha_composite
+        
             if iconCharters.mode != charter_bg_img.mode:
                 iconCharters = iconCharters.convert(charter_bg_img.mode)
             if iconCharters.size != charter_bg_img.size:
-                # Place iconCharters at (0,5) on a blank image of charter_bg_img size
+       
                 temp = Image.new(charter_bg_img.mode, charter_bg_img.size, (0,0,0,0))
                 temp.paste(iconCharters, (0,5), iconCharters)
                 iconCharters = temp
@@ -145,7 +143,7 @@ async def charactersTwo(player, assets, image):
             result.append(charter_bg_img)
     return {"r": result, "c": charterList, "ca": charactersArg}
 
-# Main extraction: profile_template2
+
 async def profile_template2(player, lang, hide, uid, assets, image=True):
     """
     Generate a profile card (template 2) for a player.
@@ -160,7 +158,6 @@ async def profile_template2(player, lang, hide, uid, assets, image=True):
         dict: {"characters": ..., "charactersArg": ..., "img": <PIL.Image>, "performed": <float>}
     """
     start = time.time()
-    # Run usersInfo and charactersTwo in parallel
     task = [usersInfo(player, lang, hide, uid), charactersTwo(player.characters_preview, assets, image)]
     it = await asyncio.gather(*task)
     fullBg = it[0]
@@ -183,23 +180,23 @@ async def profile_template2_full(player, lang, hide, uid, assets, image=True):
     Generate a profile card (template 2) for a player, showing ALL characters in a grid (like my.jpg), scaled to fit the red container at the bottom right.
     """
     start = time.time()
-    # Run usersInfo and charactersTwo in parallel
+
     task = [usersInfo(player, lang, hide, uid), charactersTwo(player.characters_preview, assets, image)]
     it = await asyncio.gather(*task)
     fullBg = it[0]
     charactersListImage, charactersList, charactersArg = it[1]["r"], it[1]["c"], it[1]["ca"]
 
-    # Red container position and size 
-    container_x = 210  # left edge of red box
-    container_y = 180  # top edge of red box
-    container_w = 600  # width of red box
-    container_h = 300  # height of red box
+   
+    container_x = 210  
+    container_y = 180  
+    container_w = 600 
+    container_h = 300  
 
-    # Layout: 4 columns per row, dynamic rows
+    
     num_chars = len(charactersListImage)
     cols = 4
     rows = math.ceil(num_chars / cols)
-    # Scale each card to 0.8 
+    
     orig_card_w, orig_card_h = charactersListImage[0].size
     scale = 0.8
     card_w, card_h = int(orig_card_w * scale), int(orig_card_h * scale)
@@ -210,14 +207,13 @@ async def profile_template2_full(player, lang, hide, uid, assets, image=True):
     # x_spacing = (container_w - (card_w * cols)) // (cols - 1) if cols > 1 else 0
     # y_spacing = (container_h - (card_h * rows)) // (rows - 1) if rows > 1 else 0
 
-    # Top-left of grid inside container
+
     x0 = container_x + 44
     y0 = container_y + 30
 
-    # Resize all cards
+
     scaled_cards = [img.resize((card_w, card_h), Image.LANCZOS) for img in charactersListImage]
 
-    # Place all character cards inside the container
     for idx, card in enumerate(scaled_cards):
         row = idx // cols
         col = idx % cols
